@@ -16,4 +16,20 @@ router.get('/:bookId', (req, res) => {
 });
 
 
+// Update Book Availability
+router.put("/:bookId", (req, res) => {
+    booksController.updateBookAvailability(req, res);
+  });
+  
+  // Delete Book by ID
+  router.delete("/:bookId", (req, res) => {
+    booksController.deleteBook(req, res);
+  });
+  
+  // List Books by Genre
+  router.get("/genre/:genre", (req, res) => {
+    booksController.listBooksByGenre(req, res);
+  });
+
+
 export default router;

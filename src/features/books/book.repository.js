@@ -24,4 +24,39 @@ export default class BookRepository {
           }
 
     }
+
+    
+    //filtering the books based on genre
+    async listBooksByGenre(genre) {
+      try {
+          const books = await bookModel.find({ genre }); 
+          return books;
+      } catch (err) {
+          throw new Error("Failed to retrieve books by genre");
+      }
+   }
+
+  //increasing the count of available books
+  async updateBookAvailability(bookId, quantity) {
+      try {
+          const updatedBook = await bookModel.findOneAndUpdate(
+              { _id: bookId },
+              { $inc: { availableCopies: quantity } }, 
+              { new: true } 
+          );
+          return updatedBook;
+      } catch (err) {
+          throw new Error("Failed to update book availability");
+      }
+   }
+
+  //deletion of book
+  async deleteBookById(bookId) { 
+      try {
+          const deletedBook = await bookModel.findByIdAndDelete(bookId);
+          return deletedBook;
+      } catch (err) {
+          throw new Error("Failed to delete the book");
+      }
+  }
 }

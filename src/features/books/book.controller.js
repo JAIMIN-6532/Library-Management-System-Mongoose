@@ -36,4 +36,60 @@ export default class BookController {
           }
      }
 
+       //filtering the books based on genre
+  listBooksByGenre = async (req, res) => {
+    const { genre } = req.params; // Extract genre from the request parameters
+
+    try {
+        const books = await this.bookRepository.listBooksByGenre(genre);
+        if (books && books.length > 0) {
+            res.status(200).json(books); // Return the list of books if found
+        } else {
+            res.status(404).send("No books found for the specified genre");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("An error occurred while retrieving books");
+    }
+  };
+
+  //increasing the count of available books
+  updateBookAvailability = async (req, res) => {
+    const { bookId } = req.params;
+    const { quantity } = req.body;
+
+    if (typeof quantity !== 'number') {
+        return res.status(400).send("Quantity must be a number");
+    }
+
+    try {
+        const updatedBook = await this.bookRepository.updateBookAvailability(bookId, quantity);
+        if (updatedBook) {
+            res.status(200).json(updatedBook); 
+        } else {
+            res.status(404).send("Book not found");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("An error occurred while updating book availability");
+    }
+  };
+
+  //deletion of book
+  deleteBook = async (req, res) => {
+    const { bookId } = req.params;
+
+    try {
+        const result = await this.bookRepository.deleteBookById(bookId);
+        if (result.deletedCount > 0) {
+            res.status(200).send("Book successfully deleted");
+        } else {
+            res.status(404).send("Book not found");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("An error occurred while deleting the book");
+    }
+  };
+
 }
