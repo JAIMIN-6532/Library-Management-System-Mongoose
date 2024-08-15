@@ -1,62 +1,139 @@
+
 import mongoose from 'mongoose';
-import bookSchema from './book.schema.js';
+import { bookSchema } from './book.schema.js'
+import { reviewSchema } from './review.schema.js';
+import { authorSchema } from './author.schema.js';
 
+// creating model from schema.
+const booksModel = mongoose.model('Book', bookSchema);
 
-const bookModel = mongoose.model('book',bookSchema);
+// creating model for review.
+const reviewModel = mongoose.model('Review', reviewSchema);
+
+const authorModel = mongoose.model('Author',authorSchema);
+
 
 export default class BookRepository {
-
-    //book creation
     async createBook(bookData) {
-      
-        const newBook = new bookModel(bookData);
-       await newBook.save();
-        return newBook;
+        const book = new booksModel(bookData);
+        const savedBook = await book.save();
+        return savedBook;
     }
 
-    //filtering the book by id
+    async addReviewToBook(bookId, text, rating) {
+        const reviewData = {
+            text,
+            rating,
+            book: new mongoose.Types.ObjectId(bookId)
+        }
+        const review = new reviewModel(reviewData);
+        const savedReview = await review.save();
+
+        const book = await booksModel.findById(bookId);
+
+        book.reviews.push(savedReview._id);
+
+        await book.save();
+
+        return savedReview;
+
+    }
+
     async getOne(id) {
-        try{
-            return await bookModel.findOne({id});
-          }catch(err){
-            console.log(err);
-            throw new ApplicationError("Something went wrong with database", 500);
-          }
+        const book = await booksModel.findById(id);
+        return book;
+    }
+
+    async listBooksByGenre(genre) {
+        const books = await booksModel.find({ genre });
+        return books;
+    }
+
+    async updateBookAvailability(bookId, quantity) {
+
+        console.log(bookId);
+        const book = await booksModel.findById(bookId);
+
+        // Calculate the new availableCopies value
+        const newAvailableCopies = book.availableCopies + quantity;
+
+        // Update the availableCopies field and save the book
+        book.availableCopies = newAvailableCopies;
+
+        await book.save();
+        return book;
+    }
+
+    async deleteBookById(bookId) {
+        const deletedBook = await booksModel.findByIdAndRemove(bookId);
+        return deletedBook;
+    }
+
+    // Complete the following four funtions.
+    async createAuthor(authorData) { 
+        const newAuthor = new authorModel(authorData);
+        const savedAuthor = await newAuthor.save();
+        return savedAuthor;
 
     }
 
-    
-    //filtering the books based on genre
-    async listBooksByGenre(genre) {
-      try {
-          const books = await bookModel.find({ genre }); 
-          return books;
-      } catch (err) {
-          throw new Error("Failed to retrieve books by genre");
-      }
-   }
+    async addAuthorToBook(bookId, authorId) {
+        const book = await booksModel.findById(bookId);
 
-  //increasing the count of available books
-  async updateBookAvailability(bookId, quantity) {
-      try {
-          const updatedBook = await bookModel.findOneAndUpdate(
-              { _id: bookId },
-              { $inc: { availableCopies: quantity } }, 
-              { new: true } 
-          );
-          return updatedBook;
-      } catch (err) {
-          throw new Error("Failed to update book availability");
-      }
-   }
+    // Check if the book exists
+    if (!book) {
+        throw new Error('Book not found');
+    }
 
-  //deletion of book
-  async deleteBookById(bookId) { 
-      try {
-          const deletedBook = await bookModel.findByIdAndDelete(bookId);
-          return deletedBook;
-      } catch (err) {
-          throw new Error("Failed to delete the book");
-      }
-  }
+    // Check if the authorId is already associated with the book
+    if (book.authors.includes(authorId)) {
+        throw new Error('Author is already associated with this book');
+    }
+
+    // Add the authorId to the book's authors array
+    book.authors.push(authorId);
+
+    // Save the updated book document
+    await book.save();
+
+    // Optionally: update the author document if needed
+    // (Assuming you have an `Author` schema with a `books` field)
+    const author = await authorModel.findById(authorId);
+    if (author) {
+        // Add the bookId to the author's books array
+        if (!author.books.includes(bookId)) {
+            author.books.push(bookId);
+            await author.save();
+        }
+    }
+
+    return book;
+     }
+
+    async listAuthorsByBook(bookId) {
+        // const book = await booksModel.findById(bookId);
+        // const authors = book.authors;
+        // console.log(authors);
+        // return authors; 
+        // Find the book and populate authors
+        const book = await booksModel.findById(bookId).populate('authors');
+        if (!book) {
+            throw new Error('Book not found');
+        }
+        return book.authors;
+     }
+
+    async listBooksByAuthor(authorId) {
+        // const author = await authorModel.findById(authorId);
+        // const books = await author.books;
+        // console.log(books);
+        // return books;
+         // Find the author and populate books
+         const author = await authorModel.findById(authorId).populate('books');
+         if (!author) {
+             throw new Error('Author not found');
+         }
+         return author.books;
+     
+     }
 }

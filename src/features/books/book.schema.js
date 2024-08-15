@@ -1,32 +1,35 @@
-// Please don't change the pre-written code
-// make the necessary imports for creating book schema named 'bookSchema'
+// Don't change the pre-written code.
+import mongoose from 'mongoose';
 
-// Start writing your code here
-import mongoose from "mongoose";
-const bookSchema = new mongoose.Schema({
+export const bookSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true
+        required: true,
+        trim: true,
     },
-    author: {
+
+    authors:[{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Author',
-        required: true
-    },
+        ref: 'Author'
+    }],
+
     genre: {
         type: String,
+        required: true,
         enum: ['Fiction', 'Non-Fiction', 'Science Fiction', 'Mystery', 'Fantasy', 'Other'],
-        required: true
     },
     copies: {
         type: Number,
         required: true,
-        min: 1
+        min: 1,
     },
     availableCopies: {
         type: Number,
         required: true,
-        min: 0
-    }
+        min: 0,
+    },
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review',
+    }]
 });
-export default bookSchema;

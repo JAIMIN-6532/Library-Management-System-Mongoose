@@ -18,6 +18,29 @@ export default class BookController {
         }
     }
 
+    addReviewToBook = async (req, res) => {
+
+        const { bookId } = req.params;
+        const { text, rating } = req.body;
+    
+        try {
+          const book = await this.bookRepository.getOne(bookId);
+          if (!book) {
+            res.status(404).send("book  not found.");
+          } else {
+            const review = await this.bookRepository.addReviewToBook(bookId, text, rating);
+            res.status(200).json(review);
+          }
+    
+    
+        } catch (err) {
+          console.log(err);
+          res.status(500).json({ error: "Falied to add review" });
+        }
+    
+    
+      }
+
     // filtering of book by id
     getOne = async (req, res) => {
         try{
@@ -89,6 +112,55 @@ export default class BookController {
     } catch (err) {
         console.error(err);
         res.status(500).send("An error occurred while deleting the book");
+    }
+  };
+  createAuthor = async (req, res) => {
+    const { name } = req.body;
+
+    try {
+      const authorData = { name };
+      const savedAuthor = await this.bookRepository.createAuthor(authorData);
+      res.status(201).json(savedAuthor);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Failed to create a new author' });
+    }
+  };
+
+  addAuthorToBook = async (req, res) => {
+    const { bookId } = req.params;
+    const { authorId } = req.body;
+
+    try {
+      const { book, author } = await this.bookRepository.addAuthorToBook(bookId, authorId);
+      res.status(200).json({ book, author });
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Failed to associate author with book' });
+    }
+  };
+
+  listAuthorsByBook = async (req, res) => {
+    const { bookId } = req.params;
+
+    try {
+      const authors = await this.bookRepository.listAuthorsByBook(bookId);
+      res.status(200).json(authors);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Failed to retrieve authors of the book' });
+    }
+  };
+
+  listBooksByAuthor = async (req, res) => {
+    const { authorId } = req.params;
+
+    try {
+      const books = await this.bookRepository.listBooksByAuthor(authorId);
+      res.status(200).json(books);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ error: 'Failed to retrieve books by the author' });
     }
   };
 

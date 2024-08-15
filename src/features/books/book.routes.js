@@ -31,5 +31,25 @@ router.put("/:bookId", (req, res) => {
     booksController.listBooksByGenre(req, res);
   });
 
+  
+// Create a New Author
+router.post("/authors", (req, res) => {
+  booksController.createAuthor(req, res);
+});
+
+// Associate an Author with a Book
+router.post("/:bookId/authors", (req, res) => {
+  booksController.addAuthorToBook(req, res);
+});
+
+// List Authors of a Book
+router.get("/:bookId/authors", (req, res) => {
+  booksController.listAuthorsByBook(req, res);
+});
+
+// List Books by an Author
+router.get("/authors/:authorId/books", (req, res) => {
+  booksController.listBooksByAuthor(req, res);
+});
 
 export default router;
