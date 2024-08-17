@@ -11,5 +11,9 @@ export const authorSchema = new mongoose.Schema({
     books: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Book'
+    }],
+    reviews: [{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Review'
     }]
 });

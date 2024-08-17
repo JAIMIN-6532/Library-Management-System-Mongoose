@@ -1,3 +1,6 @@
+// No need to change the pre-written code.
+
+// Just implement addReviewToTarget function.
 
 import mongoose from 'mongoose';
 import { bookSchema } from './book.schema.js'
@@ -10,8 +13,8 @@ const booksModel = mongoose.model('Book', bookSchema);
 // creating model for review.
 const reviewModel = mongoose.model('Review', reviewSchema);
 
-const authorModel = mongoose.model('Author',authorSchema);
-
+// creating model for author.
+const authorsModel = mongoose.model('Author', authorSchema);
 
 export default class BookRepository {
     async createBook(bookData) {
@@ -20,22 +23,38 @@ export default class BookRepository {
         return savedBook;
     }
 
-    async addReviewToBook(bookId, text, rating) {
-        const reviewData = {
-            text,
-            rating,
-            book: new mongoose.Types.ObjectId(bookId)
+    async addReviewToTarget(targetId, target, text, rating) {
+        let targetDocument;
+    
+        // Fetch the target document based on the target enum
+        if (target === "Book") {
+            targetDocument = await booksModel.findById(targetId);
+        } else if (target === "Author") {
+            targetDocument = await authorsModel.findById(targetId);
+        } else {
+            throw new Error("Invalid target type. Must be 'Book' or 'Author'.");
         }
-        const review = new reviewModel(reviewData);
-        const savedReview = await review.save();
-
-        const book = await booksModel.findById(bookId);
-
-        book.reviews.push(savedReview._id);
-
-        await book.save();
-
-        return savedReview;
+    
+        if (!targetDocument) {
+            throw new Error("Target not found.");
+        }
+    
+        // Create a new review
+        const review = new reviewModel({
+            text: text,
+            rating: rating,
+            target: target,
+            targetId: targetId
+        });
+    
+        // Save the review
+        await review.save();
+    
+        // Add the review to the target's reviews array and save the target document
+        targetDocument.reviews.push(review._id);
+        await targetDocument.save();
+    
+        return review;
 
     }
 
@@ -69,71 +88,41 @@ export default class BookRepository {
         return deletedBook;
     }
 
-    // Complete the following four funtions.
-    async createAuthor(authorData) { 
-        const newAuthor = new authorModel(authorData);
-        const savedAuthor = await newAuthor.save();
+    async createAuthor(authorData) {
+        const author = new authorsModel(authorData);
+        const savedAuthor = await author.save();
         return savedAuthor;
-
     }
 
     async addAuthorToBook(bookId, authorId) {
         const book = await booksModel.findById(bookId);
+        const author = await authorsModel.findById(authorId);
 
-    // Check if the book exists
-    if (!book) {
-        throw new Error('Book not found');
-    }
-
-    // Check if the authorId is already associated with the book
-    if (book.authors.includes(authorId)) {
-        throw new Error('Author is already associated with this book');
-    }
-
-    // Add the authorId to the book's authors array
-    book.authors.push(authorId);
-
-    // Save the updated book document
-    await book.save();
-
-    // Optionally: update the author document if needed
-    // (Assuming you have an `Author` schema with a `books` field)
-    const author = await authorModel.findById(authorId);
-    if (author) {
-        // Add the bookId to the author's books array
-        if (!author.books.includes(bookId)) {
-            author.books.push(bookId);
-            await author.save();
+        if (!book || !author) {
+            throw new Error('Book or author not found');
         }
-    }
+        book.authors.push(author._id);
+        author.books.push(book._id);
 
-    return book;
-     }
+        await book.save();
+        await author.save();
+
+        return { book, author };
+    }
 
     async listAuthorsByBook(bookId) {
-        // const book = await booksModel.findById(bookId);
-        // const authors = book.authors;
-        // console.log(authors);
-        // return authors; 
-        // Find the book and populate authors
         const book = await booksModel.findById(bookId).populate('authors');
         if (!book) {
             throw new Error('Book not found');
         }
         return book.authors;
-     }
+    }
 
     async listBooksByAuthor(authorId) {
-        // const author = await authorModel.findById(authorId);
-        // const books = await author.books;
-        // console.log(books);
-        // return books;
-         // Find the author and populate books
-         const author = await authorModel.findById(authorId).populate('books');
-         if (!author) {
-             throw new Error('Author not found');
-         }
-         return author.books;
-     
-     }
+        const author = await authorsModel.findById(authorId).populate('books');
+        if (!author) {
+            throw new Error('Author not found');
+        }
+        return author.books;
+    }
 }

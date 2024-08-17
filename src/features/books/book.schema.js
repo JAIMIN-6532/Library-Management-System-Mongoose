@@ -1,4 +1,3 @@
-// Don't change the pre-written code.
 import mongoose from 'mongoose';
 
 export const bookSchema = new mongoose.Schema({
@@ -7,12 +6,10 @@ export const bookSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-
-    authors:[{
+    authors: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Author'
+        ref: 'Author',
     }],
-
     genre: {
         type: String,
         required: true,
